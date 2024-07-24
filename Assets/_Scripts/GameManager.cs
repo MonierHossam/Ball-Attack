@@ -5,10 +5,10 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(CollectablesManager))]
 public class GameManager : Singleton<GameManager>
 {
-    [SerializeField] CollectablesManager collectablesManager;
-    [SerializeField] EnemiesManager enemiesManager;
+    [SerializeField] ObjectPoolManager collectablesManager;
+    [SerializeField] ObjectPoolManager enemiesManager;
 
-    [SerializeField] PlayerMovement playerMovement;
+    public PlayerMovement playerMovement;
     LevelManager levelManager;
 
     [Header("Variables")]
@@ -16,6 +16,9 @@ public class GameManager : Singleton<GameManager>
     public GameState gameState;
 
     public LevelSO currentLevel;
+
+    [SerializeField] Vector3 minLevelBoundries;
+    [SerializeField] Vector3 maxLevelBoundries;
 
     [SerializeField] int spawnedCollectables;
     [SerializeField] int totalCollected;
@@ -31,16 +34,17 @@ public class GameManager : Singleton<GameManager>
     private int maxEnemiesInLevel;
 
     private int totalBallsInScene;
+    private int totalEnemiesInScene;
     private float sinceLastSpawn;
     private float sinceLastEnemySpawn;
     #endregion
-
 
     #region Events
     public Action<float> OnSizeChanged;
     public Action<int> OnBallsCountChanged;
     public Action<GameState> OnGameEnded;
     public Action<int> OnLevelNumberChange;
+    public Action<int> OnEnemiesCountChanged;
     #endregion
 
 
@@ -76,49 +80,48 @@ public class GameManager : Singleton<GameManager>
     {
         if (spawnedCollectables < maxCollectablesInLevel && Time.time - sinceLastSpawn >= spawnInterval)
         {
-            SpawnNewCollectable();
+            SpawnNewItem(SpawnType.Collectable);
         }
 
         if (spawnedEnemies < maxEnemiesInLevel && Time.time - sinceLastEnemySpawn >= spawnInterval)
         {
-            SpawnNewEnemy();
+            SpawnNewItem(SpawnType.Enemies);
         }
     }
 
-    private void SpawnNewCollectable()
+    private void SpawnNewItem(SpawnType spawn)
     {
-        float x = UnityEngine.Random.Range(-10, 10);
-        float z = UnityEngine.Random.Range(-10, 10);
+        float x = UnityEngine.Random.Range(minLevelBoundries.x, maxLevelBoundries.x);
+        float z = UnityEngine.Random.Range(minLevelBoundries.z, maxLevelBoundries.z);
 
         Vector3 pos = new Vector3(x, 0, z);
 
-        collectablesManager.SpawnFromPool(pos, Quaternion.identity);
+        if (SpawnType.Collectable == spawn)
+        {
+            collectablesManager.SpawnFromPool(pos, Quaternion.identity);
 
-        sinceLastSpawn = Time.time;
-        spawnedCollectables++;
-        totalBallsInScene++;
-        OnBallsCountChanged?.Invoke(totalBallsInScene);
-    }
+            sinceLastSpawn = Time.time;
+            spawnedCollectables++;
+            totalBallsInScene++;
+            OnBallsCountChanged?.Invoke(totalBallsInScene);
+        }
+        else
+        {
+            enemiesManager.SpawnFromPool(pos, Quaternion.identity);
 
-    private void SpawnNewEnemy()
-    {
-        float x = UnityEngine.Random.Range(-10, 10);
-        float z = UnityEngine.Random.Range(-10, 10);
-
-        Vector3 pos = new Vector3(x, 0, z);
-
-        enemiesManager.SpawnFromPool(pos, Quaternion.identity);
-
-        sinceLastEnemySpawn = Time.time;
-        spawnedEnemies++;
+            sinceLastEnemySpawn = Time.time;
+            spawnedEnemies++;
+            totalEnemiesInScene++;
+            OnEnemiesCountChanged?.Invoke(totalEnemiesInScene);
+        }
     }
 
     private void SpawnInitialCollectables()
     {
         for (int i = 0; i < initialColletablesToSpawn; ++i)
         {
-            float x = UnityEngine.Random.Range(-10, 10);
-            float z = UnityEngine.Random.Range(-10, 10);
+            float x = UnityEngine.Random.Range(minLevelBoundries.x, maxLevelBoundries.x);
+            float z = UnityEngine.Random.Range(minLevelBoundries.z, maxLevelBoundries.z);
 
             Vector3 pos = new Vector3(x, 0, z);
 
@@ -135,16 +138,18 @@ public class GameManager : Singleton<GameManager>
     {
         for (int i = 0; i < initialEnemiesToSpawn; ++i)
         {
-            float x = UnityEngine.Random.Range(-10, 10);
-            float z = UnityEngine.Random.Range(-10, 10);
+            float x = UnityEngine.Random.Range(minLevelBoundries.x, maxLevelBoundries.x);
+            float z = UnityEngine.Random.Range(minLevelBoundries.z, maxLevelBoundries.z);
 
             Vector3 pos = new Vector3(x, 0, z);
 
             enemiesManager.SpawnFromPool(pos, Quaternion.identity);
         }
 
-        spawnedEnemies += initialColletablesToSpawn;
+        spawnedEnemies += initialEnemiesToSpawn;
         sinceLastEnemySpawn = Time.time;
+        totalEnemiesInScene += initialEnemiesToSpawn;
+        OnEnemiesCountChanged?.Invoke(totalEnemiesInScene);
     }
 
     public void ColliededWithCollectable(GameObject other)
@@ -166,6 +171,8 @@ public class GameManager : Singleton<GameManager>
     public void ColliededWithEnemy(GameObject other)
     {
         enemiesManager.ReturnToPool(other);
+        totalEnemiesInScene--;
+        OnEnemiesCountChanged?.Invoke(totalEnemiesInScene);
     }
 
     public void EndGame(GameState state)
@@ -192,6 +199,7 @@ public class GameManager : Singleton<GameManager>
         spawnedEnemies = 0;
         totalCollected = 0;
         totalBallsInScene = 0;
+        totalEnemiesInScene = 0;
         sinceLastSpawn = 0;
         sinceLastEnemySpawn = 0;
 
@@ -207,6 +215,8 @@ public class GameManager : Singleton<GameManager>
         AllowMoving();
 
         OnBallsCountChanged?.Invoke(totalBallsInScene);
+
+        OnEnemiesCountChanged?.Invoke(totalEnemiesInScene);
     }
 
     public void UpdateSize(float size)
@@ -237,3 +247,4 @@ public enum GameState
     Won,
     Lost
 }
+

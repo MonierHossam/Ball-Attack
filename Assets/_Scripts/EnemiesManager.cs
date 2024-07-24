@@ -1,66 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
-public class EnemiesManager : MonoBehaviour
+public class EnemiesManager : ObjectPoolManager
 {
-    [SerializeField] List<PoolObject> pools;
-    [SerializeField] Queue<GameObject> objectPool;
+    GameManager gameManager;
 
-    public void InitializPool(int max)
+    private void Awake()
     {
-        int rand = 0;
+        gameManager = GameManager.GetInstance();
+    }
 
-        objectPool = new Queue<GameObject>();
+    public override void InitializPool(int max)
+    {
+        base.InitializPool(max);
 
-        GameObject parent = new GameObject();
-
-        parent.name = "Enemies Objects";
-
-        for (int i = 0; i < max; i++)
+        foreach (var obj in objectPool)
         {
-            rand = Random.Range(0, pools.Count - 1);
-
-            GameObject obj = Instantiate(pools[rand].prefab);
-
-            obj.SetActive(false);
-            objectPool.Enqueue(obj);
-
-            obj.transform.parent = parent.transform;
+            Enemy en = obj.GetComponent<Enemy>();
+            gameManager.playerMovement.OnPositionUpdate += en.UpdatePlayerPosition;
         }
     }
 
-    public GameObject SpawnFromPool(Vector3 position, Quaternion rotation)
-    {
-        // If the pool is empty, instantiate a new object
-        if (objectPool.Count == 0)
-        {
-            return null;
-        }
-
-        // Otherwise, reuse an object from the pool
-        GameObject objectToSpawn = objectPool.Dequeue();
-        return SetupPooledObject(objectToSpawn, position, rotation);
-    }
-
-    private GameObject SetupPooledObject(GameObject obj, Vector3 position, Quaternion rotation)
-    {
-        obj.SetActive(true);
-        obj.transform.position = position;
-        obj.transform.rotation = rotation;
-
-        IPoolObject pooledObj = obj.GetComponent<IPoolObject>();
-        if (pooledObj != null)
-        {
-            pooledObj.OnObjectSpawn();
-        }
-
-        return obj;
-    }
-
-    public virtual void ReturnToPool(GameObject objectToReturn)
-    {
-        objectToReturn.SetActive(false);
-        objectPool.Enqueue(objectToReturn);
-    }
 }

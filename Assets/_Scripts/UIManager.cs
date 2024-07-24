@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] TMP_Text sizeValueText;
     [SerializeField] TMP_Text ballsCountText;
     [SerializeField] TMP_Text levelNumberText;
+    [SerializeField] TMP_Text enemiesCountText;
 
     GameState currentState;
 
@@ -31,6 +32,7 @@ public class UIManager : MonoBehaviour
         gameManager.OnBallsCountChanged += UpdateBallsCountText;
         gameManager.OnGameEnded += GameEnded;
         gameManager.OnLevelNumberChange += UpdateLevelNumberText;
+        gameManager.OnEnemiesCountChanged += UpdateEnemiesCountText;
     }
 
     private void OnDisable()
@@ -39,6 +41,7 @@ public class UIManager : MonoBehaviour
         gameManager.OnBallsCountChanged -= UpdateBallsCountText;
         gameManager.OnGameEnded -= GameEnded;
         gameManager.OnLevelNumberChange -= UpdateLevelNumberText;
+        gameManager.OnEnemiesCountChanged -= UpdateEnemiesCountText;
     }
 
     private void UpdateLevelNumberText(int value)
@@ -71,6 +74,11 @@ public class UIManager : MonoBehaviour
     public void UpdateBallsCountText(int value)
     {
         ballsCountText.text = value.ToString();
+    }
+
+    public void UpdateEnemiesCountText(int value)
+    {
+        enemiesCountText.text = value.ToString();
     }
 
     public void GameEnded(GameState state)
