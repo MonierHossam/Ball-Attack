@@ -1,17 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(PlayerMovement))]
 public class Player : MonoBehaviour
 {
     private GameManager gameManager;
 
     [SerializeField] float increaseFactor = 0.2f;
-    [SerializeField] float decreaseFactor = 0.1f;
 
     private void Start()
     {
         gameManager = GameManager.GetInstance();
+
+        gameManager.OnSizeChanged?.Invoke(this.transform.localScale.y);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -26,13 +26,15 @@ public class Player : MonoBehaviour
 
     private void IncreaseSize()
     {
-        Debug.Log("increasing size");
+        this.transform.localScale = new Vector3(this.transform.localScale.x + increaseFactor, this.transform.localScale.y + increaseFactor, this.transform.localScale.z + increaseFactor);
 
-        this.transform.localScale = new Vector3(this.transform.localScale.x + increaseFactor, this.transform.localScale.y + increaseFactor, this.transform.localScale.z);
+        gameManager.UpdateSize(this.transform.localScale.y);
     }
 
-    private void DecreaseSize()
+    public void DecreaseSize(float decreaseFactor)
     {
-        this.transform.localScale = new Vector3(this.transform.localScale.x - decreaseFactor, this.transform.localScale.y - decreaseFactor, this.transform.localScale.z);
+        this.transform.localScale = new Vector3(this.transform.localScale.x - decreaseFactor, this.transform.localScale.y - decreaseFactor, this.transform.localScale.z - decreaseFactor);
+
+        gameManager.UpdateSize(this.transform.localScale.y);
     }
 }

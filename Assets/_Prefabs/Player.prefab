@@ -20,6 +20,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 77d0b00bd45ddc84eae1606b4748ffe4,
         type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 77d0b00bd45ddc84eae1606b4748ffe4,
+        type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -118,6 +123,7 @@ MonoBehaviour:
   moveSpeed: 1
   turnSpeed: 5
   smoothFactor: 0.1
+  rb: {fileID: 0}
 --- !u!54 &6925518905196384841
 Rigidbody:
   m_ObjectHideFlags: 0
